@@ -15,16 +15,18 @@
 #define ALIGNED 8
 #define EXPAND 5
 
+int m_error;
 
 static header* free_head = NULL;
 static header* head = NULL;
 static int init = FALSE;
 static int coal_all = FALSE;
-long end_address;
+void* end_address;
 
 int Mem_Init(long sizeofRegion) {
   if(init == TRUE) {
     m_error = E_BAD_ARGS;
+    printf("here\n");
     return FAIL;
   }
   if(sizeofRegion <= 0) {
@@ -35,17 +37,19 @@ int Mem_Init(long sizeofRegion) {
   long byte_roundup = (long) round(sizeofRegion * 1.0f / ALIGNED + 0.5f);
   long byte_num = byte_roundup * ALIGNED * EXPAND;
   long region_size = (long) round(byte_num * 1.0f / getpagesize() + 0.5f);
+  printf("byte num is %ld and region size is %ld\n", byte_num, region_size);
   long size_of_region = region_size * getpagesize();
-
-  if((free_head = mmap(NULL, size_of_region, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_ANON, -1, (off_t) 0)) == (void*) -1) {
+  if((free_head = mmap(NULL, size_of_region, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_SHARED, -1, 0)) == (void*) -1) {
     m_error = E_BAD_ARGS;
+    perror("Failed mmap:");
     return FAIL;
    }
   head = free_head;
-  end_address = (long)((char*)free_head + size_of_region);
+  end_address = (void*)((long)((char*)free_head + size_of_region));
   new_header(free_head, NULL, NULL, FREE, NULL);
   init = TRUE;
-  printf(" in init free list %p\n", free_head);
+  printf("page size is %d\n", getpagesize());
+  printf(" size_of_region %ld in init free list %p and end address %p\n", size_of_region, free_head, (void*)end_address);
   return SUCCESS;   
 }
 
@@ -70,7 +74,7 @@ void *Mem_Alloc(long size) {
     if(temp != NULL) {
       size = (char*)temp - (char*)traverse - HEADER_SIZE;
     } else {
-      size = end_address - (long)(void*)traverse - HEADER_SIZE;
+      size = (long)end_address - (long)(void*)traverse - HEADER_SIZE;
     }
     if(size > maxsize) {
       maxsize = size;
@@ -89,13 +93,14 @@ void *Mem_Alloc(long size) {
     m_error = E_NO_SPACE;
     return NULL;
   }
-  if(target->canary_start != CSTART || target->canary_end != CEND) {
+  /*  if(target->canary_start != CSTART || target->canary_end != CEND) {
     m_error = E_CORRUPT_FREESPACE;
     printf("corrupted\n");
     return NULL;
-  }
+    }*/
 
   //  header* prevh = target->prev;
+  printf("Actual assigned %ld\n", actual_assigned);
   header* nexth = target->next;
   header* next_free = target->next_free;
   header* new_free = NULL;
@@ -122,7 +127,7 @@ void *Mem_Alloc(long size) {
       nexth->prev = new_free;
     }
   }
-
+  printf("allocated header address %p\n", target);
   return (void*)((char*)target + HEADER_SIZE);
 }
 
@@ -131,7 +136,7 @@ int Mem_Free(void* ptr, int coalesce) {
     m_error = E_BAD_POINTER;
     return FAIL;
   }
-  header* target = (header*) ptr;
+  header* target = (header*)((char*) ((header*)ptr) - HEADER_SIZE);
   if(target->state == FREE) {
     m_error = E_BAD_POINTER;
     return FAIL;
@@ -169,6 +174,10 @@ int Mem_Free(void* ptr, int coalesce) {
  	header* nextprev = prev_free->next;
 	if((char*)nextprev == (char*) target) {
 	  result = prev_free;
+	  result->next = target->next;
+	  if(target->next != NULL) {
+	    target->next->prev = result;
+	  }
 	  result->next_free = target->next_free;
 	  target->next_free = NULL;
 	} else {
@@ -178,6 +187,10 @@ int Mem_Free(void* ptr, int coalesce) {
       if((char*)nexttarget == (char*) after_free) {
 	if(target->next_free != NULL) {
 	  target->next_free = NULL;
+	}
+	result->next = after_free->next;
+	if(after_free->next != NULL) {
+	  after_free->next->prev = result;
 	}
 	result->next_free = after_free->next_free;
       }
@@ -192,6 +205,10 @@ int Mem_Free(void* ptr, int coalesce) {
       while(fol != NULL) {
 	if(cur->next == fol) {
 	  curfreenode->next_free = fol->next_free;
+	  curfreenode->next = fol->next;
+	  if(fol->next != NULL) {
+	    fol->next->prev = curfreenode;
+	  }
 	  cur = fol;
 	  fol = fol->next_free;
 	  cur->next_free = NULL;
@@ -212,7 +229,7 @@ void Mem_Dump() {
   header* temp = free_head;
   int index = 1;
   while(temp != NULL) {
-    printf("[%d] free address at %p\n", index, temp);
+    printf("[%d] free address header at %p with state %c\n", index, temp, temp->state);
     index ++;
     temp = temp->next_free;
   } 
