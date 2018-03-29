@@ -26,7 +26,6 @@ void* end_address;
 int Mem_Init(long sizeofRegion) {
   if(init == TRUE) {
     m_error = E_BAD_ARGS;
-    printf("here\n");
     return FAIL;
   }
   if(sizeofRegion <= 0) {
@@ -37,7 +36,6 @@ int Mem_Init(long sizeofRegion) {
   long byte_roundup = (long) round(sizeofRegion * 1.0f / ALIGNED + 0.5f);
   long byte_num = byte_roundup * ALIGNED * EXPAND;
   long region_size = (long) round(byte_num * 1.0f / getpagesize() + 0.5f);
-  printf("byte num is %ld and region size is %ld\n", byte_num, region_size);
   long size_of_region = region_size * getpagesize();
   if((free_head = mmap(NULL, size_of_region, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_SHARED, -1, 0)) == (void*) -1) {
     m_error = E_BAD_ARGS;
@@ -48,7 +46,6 @@ int Mem_Init(long sizeofRegion) {
   end_address = (void*)((long)((char*)free_head + size_of_region));
   new_header(free_head, NULL, NULL, FREE, NULL);
   init = TRUE;
-  printf("page size is %d\n", getpagesize());
   printf(" size_of_region %ld in init free list %p and end address %p\n", size_of_region, free_head, (void*)end_address);
   return SUCCESS;   
 }
@@ -93,13 +90,7 @@ void *Mem_Alloc(long size) {
     m_error = E_NO_SPACE;
     return NULL;
   }
-  /*  if(target->canary_start != CSTART || target->canary_end != CEND) {
-    m_error = E_CORRUPT_FREESPACE;
-    printf("corrupted\n");
-    return NULL;
-    }*/
 
-  //  header* prevh = target->prev;
   printf("Actual assigned %ld\n", actual_assigned);
   header* nexth = target->next;
   header* next_free = target->next_free;
@@ -115,8 +106,6 @@ void *Mem_Alloc(long size) {
   } else {
     new_free = (header*)((char*)target + actual_assigned + HEADER_SIZE);
     new_header(new_free, target, nexth, FREE, next_free);
-    // now nexth should points to newfree, before_target next should be new_free, target next should be new free, new free before should be target,
-    // target:
     target->next = new_free;
     if(before_target != NULL) {
       before_target->next_free = new_free;
@@ -195,9 +184,6 @@ int Mem_Free(void* ptr, int coalesce) {
 	result->next_free = after_free->next_free;
       }
     } else {
-      
-      // if coal_all == TRUE, combine all
-      // curfreenode cannot be NULL since just freed
       header* curfreenode = free_head;
       header* cur = curfreenode;
       header* fol = curfreenode->next_free;
@@ -219,6 +205,7 @@ int Mem_Free(void* ptr, int coalesce) {
 	  fol = fol->next_free;
 	}
       }
+      coal_all = FALSE;
     }
   }
   return SUCCESS;

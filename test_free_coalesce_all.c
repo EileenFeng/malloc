@@ -48,7 +48,7 @@ int main(int argc, char** argv) {
   }
 
   printf("* Free region_one\n");
-  if(Mem_Free(region_one, TRUE) == FAIL) {
+  if(Mem_Free(region_one, FALSE) == FAIL) {
     printf("Free region_one failed\n");
     exit(EXIT_FAILURE);
   }
@@ -79,6 +79,11 @@ int main(int argc, char** argv) {
     printf("Free region_four failed\n");
     exit(EXIT_FAILURE);
   }
-  Mem_Dump(); 
+  Mem_Dump();
+  if(Mem_Free(region_four, TRUE) == TRUE) {
+    printf("Double freed!\n");
+    printf("Test failed\n");
+    exit(EXIT_FAILURE);
+  }
   printf("Test passed!\n");
 }
