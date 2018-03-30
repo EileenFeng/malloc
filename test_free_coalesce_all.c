@@ -54,12 +54,12 @@ int main(int argc, char** argv) {
   }
   Mem_Dump();
   printf("* Free region_two\n");
-  if(Mem_Free(region_two, TRUE) == FAIL) {
+  if(Mem_Free(region_two, FALSE) == FAIL) {
     printf("Free region_two failed\n");
     exit(EXIT_FAILURE);
   }
   Mem_Dump();
-  printf("* Free region_three\n");
+  printf("* Free region_three coalesce all\n");
   if(Mem_Free(region_three, TRUE) == FAIL) {
     printf("Free region_three failed\n");
     exit(EXIT_FAILURE);

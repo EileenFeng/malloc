@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <string.h>
 #include <sys/mman.h>
 #include <unistd.h>
 #include "header.h"
@@ -41,7 +42,8 @@ int Mem_Init(long sizeofRegion) {
     m_error = E_BAD_ARGS;
     perror("Failed mmap:");
     return FAIL;
-   }
+  }
+  bzero(free_head, size_of_region);
   head = free_head;
   end_address = (void*)((long)((char*)free_head + size_of_region));
   new_header(free_head, NULL, NULL, FREE, NULL);
@@ -92,6 +94,16 @@ void *Mem_Alloc(long size) {
   }
 
   printf("Actual assigned %ld\n", actual_assigned);
+  if(target->state == ALLOC) {
+    m_error = E_CORRUPT_FREESPACE;
+    return FAIL;
+  }
+  if(target->canary_start != CSTART || target->canary_end != CEND) {
+    m_error = E_CORRUPT_FREESPACE;
+    return FAIL;
+  }
+
+
   header* nexth = target->next;
   header* next_free = target->next_free;
   header* new_free = NULL;
