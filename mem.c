@@ -116,6 +116,8 @@ void *Mem_Alloc(long size) {
       nexth->prev = new_free;
     }
   }
+  target->canary_start = CSTART;
+  target->canary_end = CEND;
   printf("allocated header address %p\n", target);
   return (void*)((char*)target + HEADER_SIZE);
 }
@@ -128,6 +130,10 @@ int Mem_Free(void* ptr, int coalesce) {
   header* target = (header*)((char*) ((header*)ptr) - HEADER_SIZE);
   if(target->state == FREE) {
     m_error = E_BAD_POINTER;
+    return FAIL;
+  }
+  if(target->canary_end != CEND || target->canary_start != CSTART) {
+    m_error = E_PADDING_OVERWRITTEN;
     return FAIL;
   }
   

@@ -3,8 +3,8 @@
 
 #define ALLOC 65
 #define FREE 70
-#define CSTART 202
-#define CEND 203
+#define CSTART 31
+#define CEND 30
 #define PADDING 80
 
 typedef struct header {
