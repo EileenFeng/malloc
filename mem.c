@@ -93,14 +93,14 @@ void *Mem_Alloc(long size) {
     return NULL;
   }
 
-  printf("Actual assigned %ld\n", actual_assigned);
+  //  printf("Actual assigned %ld\n", actual_assigned);
   if(target->state == ALLOC) {
     m_error = E_CORRUPT_FREESPACE;
-    return FAIL;
+    return NULL;
   }
   if(target->canary_start != CSTART || target->canary_end != CEND) {
     m_error = E_CORRUPT_FREESPACE;
-    return FAIL;
+    return NULL;
   }
 
 
@@ -130,7 +130,7 @@ void *Mem_Alloc(long size) {
   }
   target->canary_start = CSTART;
   target->canary_end = CEND;
-  printf("allocated header address %p\n", target);
+  //printf("allocated header address %p\n", target);
   return (void*)((char*)target + HEADER_SIZE);
 }
 
