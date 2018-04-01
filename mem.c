@@ -19,10 +19,35 @@
 int m_error;
 
 static header* free_head = NULL;
-static header* head = NULL;
+//static header* head = NULL;
+static header* prev_biggest = NULL;
+static header* biggest = NULL;
+static header* second_big = NULL;
+static header* prev_second_big = NULL;
 static int init = FALSE;
 static int coal_all = FALSE;
 void* end_address;
+
+static void set_biggest() {
+  header* before_traverse = NULL;
+  header* traverse = free_head;
+  long maxsize = 0;
+  while(traverse != NULL) {
+    header* temp = traverse->next;
+    long size = temp != NULL ? (char*)temp - (char*)traverse - HEADER_SIZE : (char*)end_address - (char*)traverse - HEADER_SIZE;
+    
+    if(size > maxsize) {
+      maxsize = size;
+      prev_second_big = prev_biggest;
+      second_big = biggest;
+      prev_biggest = before_traverse;;
+      biggest = traverse;
+    }
+    before_traverse = traverse;
+    traverse = traverse->next_free;
+  }
+}
+
 
 int Mem_Init(long sizeofRegion) {
   if(init == TRUE) {
@@ -44,7 +69,6 @@ int Mem_Init(long sizeofRegion) {
     return FAIL;
   }
   bzero(free_head, size_of_region);
-  head = free_head;
   end_address = (void*)((long)((char*)free_head + size_of_region));
   new_header(free_head, NULL, NULL, FREE, NULL);
   init = TRUE;
@@ -64,57 +88,48 @@ void *Mem_Alloc(long size) {
   header* target = NULL;
 
   // get the max node
-  header* before_traverse = NULL;
-  header* traverse = free_head;
-  long maxsize = 0;
-  while(traverse != NULL) {
-    header* temp = traverse->next;
-    long size;
-    if(temp != NULL) {
-      size = (char*)temp - (char*)traverse - HEADER_SIZE;
-    } else {
-      size = (long)end_address - (long)(void*)traverse - HEADER_SIZE;
-    }
-    if(size > maxsize) {
-      maxsize = size;
-      before_target = before_traverse;
-      target = traverse;
-    } 
-    before_traverse = traverse;
-    traverse = traverse->next_free;
+  if(biggest == NULL) {
+    set_biggest();
+   
   }
+  target = biggest;
+  before_target = prev_biggest;
 
   if(target == NULL) {
     m_error = E_NO_SPACE;
     return NULL;
   }
+    
+  if(target->state == ALLOC) {
+    m_error = E_CORRUPT_FREESPACE;
+    return NULL;
+  }
+  
+  if(target->canary_start != CSTART || target->canary_end != CEND) {
+    m_error = E_CORRUPT_FREESPACE;
+    return NULL;
+  }   
+  
+  header* nexth = target->next;
+  header* next_free = target->next_free;
+  header* new_free = NULL;
+  long maxsize = nexth == NULL ? (char*)end_address - (char*)target - HEADER_SIZE : (char*)nexth - (char*)target - HEADER_SIZE;
+  target->state = ALLOC;
+  target->next_free = NULL;      
+  
   if(maxsize < actual_assigned) {
     m_error = E_NO_SPACE;
     return NULL;
   }
 
-  //  printf("Actual assigned %ld\n", actual_assigned);
-  if(target->state == ALLOC) {
-    m_error = E_CORRUPT_FREESPACE;
-    return NULL;
-  }
-  if(target->canary_start != CSTART || target->canary_end != CEND) {
-    m_error = E_CORRUPT_FREESPACE;
-    return NULL;
-  }
-
-
-  header* nexth = target->next;
-  header* next_free = target->next_free;
-  header* new_free = NULL;
-  target->state = ALLOC;
-  target->next_free = NULL;
+  printf("Actual assigned %ld\n", actual_assigned);
   if(maxsize == actual_assigned) {
     if(before_target != NULL) {
       before_target->next_free = next_free;
     } else {
       free_head = next_free;
     }
+    set_biggest();
   } else {
     new_free = (header*)((char*)target + actual_assigned + HEADER_SIZE);
     new_header(new_free, target, nexth, FREE, next_free);
@@ -130,7 +145,19 @@ void *Mem_Alloc(long size) {
   }
   target->canary_start = CSTART;
   target->canary_end = CEND;
-  //printf("allocated header address %p\n", target);
+  
+  if(second_big != NULL) {                                                                                                
+      header* snext = second_big->next;
+      long ssize = snext == NULL ? (char*)end_address - (char*)second_big - HEADER_SIZE : (char*)snext - (char*)second_big - HEADER_SIZE;
+      long bsize = maxsize - actual_assigned;
+      if(bsize < ssize) {
+	set_biggest();
+      } else {
+	biggest = new_free;
+      }
+  } else {                                                                                                                
+      biggest = new_free;
+  }   
   return (void*)((char*)target + HEADER_SIZE);
 }
 
@@ -226,6 +253,10 @@ int Mem_Free(void* ptr, int coalesce) {
       coal_all = FALSE;
     }
   }
+  biggest = NULL;
+  prev_biggest = NULL;
+  second_big = NULL;
+  prev_second_big = NULL;
   return SUCCESS;
 }
 
@@ -234,7 +265,9 @@ void Mem_Dump() {
   header* temp = free_head;
   int index = 1;
   while(temp != NULL) {
-    printf("[%d] free address header at %p with state %c\n", index, temp, temp->state);
+    header* hnext = temp->next;
+    long size = hnext != NULL ? (char*)hnext - (char*)temp - HEADER_SIZE: (char*)end_address - (char*)temp - HEADER_SIZE;
+    printf("[%d] free address header at %p with size %ld and state %c\n", index, (char*)temp+HEADER_SIZE, size, temp->state);
     index ++;
     temp = temp->next_free;
   } 
