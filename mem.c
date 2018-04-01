@@ -72,7 +72,7 @@ int Mem_Init(long sizeofRegion) {
   end_address = (void*)((long)((char*)free_head + size_of_region));
   new_header(free_head, NULL, NULL, FREE, NULL);
   init = TRUE;
-  printf(" size_of_region %ld in init free list %p and end address %p\n", size_of_region, free_head, (void*)end_address);
+  //  printf(" size_of_region %ld in init free list %p and end address %p\n", size_of_region, free_head, (void*)end_address);
   return SUCCESS;   
 }
 
@@ -122,7 +122,7 @@ void *Mem_Alloc(long size) {
     return NULL;
   }
 
-  printf("Actual assigned %ld\n", actual_assigned);
+  //  printf("Actual assigned %ld\n", actual_assigned);
   if(maxsize == actual_assigned) {
     if(before_target != NULL) {
       before_target->next_free = next_free;
