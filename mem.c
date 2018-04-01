@@ -122,7 +122,7 @@ void *Mem_Alloc(long size) {
     return NULL;
   }
 
-  //  printf("Actual assigned %ld\n", actual_assigned);
+  printf("Actual assigned %ld\n", actual_assigned);
   if(maxsize == actual_assigned) {
     if(before_target != NULL) {
       before_target->next_free = next_free;
@@ -157,7 +157,8 @@ void *Mem_Alloc(long size) {
       }
   } else {                                                                                                                
       biggest = new_free;
-  }   
+  }
+  printf("header is at %p\n", target);
   return (void*)((char*)target + HEADER_SIZE);
 }
 
@@ -179,12 +180,15 @@ int Mem_Free(void* ptr, int coalesce) {
   target->state = FREE;
   header* prev_free = NULL;
   header* after_free = free_head;
-  while(after_free != NULL) {
-    if(after_free > target) {
-      break;
-    } else {
-      prev_free = after_free;
-      after_free = after_free->next_free;
+  if(target > free_head) {
+    header* temp = target->prev;
+    while(temp != NULL) {
+      if(temp->state == FREE){
+	prev_free = temp;
+	after_free = temp->next_free;
+	break;
+      }
+      temp = temp->prev;
     }
   }
 
