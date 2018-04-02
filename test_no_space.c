@@ -23,9 +23,13 @@ int main(int argc, char** argv) {
   }
   printf("*** Before any allocations *** \n");
   Mem_Dump();
-  long size = (long)(regionsize * EXPAND - HEADER_SIZE);
-  void* region = Mem_Alloc(size);
-  if(region == NULL) {
+  long size = (long)(regionsize * EXPAND / 2 - HEADER_SIZE);
+  void* region_one = Mem_Alloc(size);
+  if(region_one == NULL) {
+    exit(EXIT_FAILURE);
+  }
+  void* region_two = Mem_Alloc(size);
+  if(region_two == NULL) {
     exit(EXIT_FAILURE);
   }
   printf("*** Mem_Dump now should not have any output ***\n");
@@ -36,17 +40,16 @@ int main(int argc, char** argv) {
   } else {
     exit(EXIT_FAILURE);
   }
-  printf("lol\n");
-  if(Mem_Free(region, TRUE) == FAIL) {
+  if(Mem_Free(region_one, TRUE) == FAIL) {
     exit(EXIT_FAILURE);
   }
-  printf("*** After freeing and coalesce all memory ***\n");
+  printf("*** After freeing and coalesce some memory ***\n");
   Mem_Dump();
-  region = Mem_Alloc(UNITSIZE);
-  if(region == NULL) {
+  region_one = Mem_Alloc(UNITSIZE);
+  if(region_one == NULL) {
     exit(EXIT_FAILURE);
   }
-  if(Mem_Free(region, FALSE) == FAIL) {
+  if(Mem_Free(region_one, FALSE) == FAIL) {
     exit(EXIT_FAILURE);
   }
   printf("*** Mem_Dump should give two free memory regions ***\n");

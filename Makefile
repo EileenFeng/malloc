@@ -42,4 +42,4 @@ mem.o: mem.c mem.h header.c header.h
 	$(CC) $(FLAGS) -c mem.c header.c
 
 clean:
-	rm *.o libmalloc.so tinitup tinitone taligned tnotaligned tworstfit t_sim_free tcoal tcall tnospace kcoal kncoal
+	rm *.o libmalloc.so tinitrp tinitone taligned tnotaligned tworstfit t_sim_free tcoal tcall tnospace kcoal kncoal
