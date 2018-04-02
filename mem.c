@@ -58,10 +58,10 @@ int Mem_Init(long sizeofRegion) {
     m_error = E_BAD_ARGS;
     return FAIL;
   }
-
-  long byte_roundup = (long) round(sizeofRegion * 1.0f / ALIGNED + 0.5f);
+  
+  long byte_roundup = sizeofRegion % ALIGNED == 0 ? (long)(sizeofRegion / ALIGNED) : (long) round(sizeofRegion * 1.0f / ALIGNED + 0.5f);
   long byte_num = byte_roundup * ALIGNED * EXPAND;
-  long region_size = (long) round(byte_num * 1.0f / getpagesize() + 0.5f);
+  long region_size = byte_num % getpagesize() == 0 ? (long)(byte_num / getpagesize()) : (long) round(byte_num * 1.0f / getpagesize() + 0.5f);
   long size_of_region = region_size * getpagesize();
   if((free_head = mmap(NULL, size_of_region, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_SHARED, -1, 0)) == (void*) -1) {
     m_error = E_BAD_ARGS;
@@ -82,16 +82,16 @@ void *Mem_Alloc(long size) {
     return NULL;
   }
 
-  long unit_num = (long) round(size * 1.0f / ALIGNED + 0.5f);
+  long unit_num = size % ALIGNED == 0 ? (long)(size / ALIGNED) : (long) round(size * 1.0f / ALIGNED + 0.5f);
   long actual_assigned = (long) unit_num * ALIGNED;
   header* before_target = NULL;
   header* target = NULL;
 
   // get the max node
   if(biggest == NULL) {
-    set_biggest();
-   
+    set_biggest();   
   }
+  
   target = biggest;
   before_target = prev_biggest;
 
@@ -180,6 +180,13 @@ int Mem_Free(void* ptr, int coalesce) {
   target->state = FREE;
   header* prev_free = NULL;
   header* after_free = free_head;
+
+  if(free_head == NULL) {
+    free_head = target;
+    target->next_free = NULL;
+    return SUCCESS;
+  }
+  
   if(target > free_head) {
     header* temp = target->prev;
     while(temp != NULL) {
@@ -266,12 +273,16 @@ int Mem_Free(void* ptr, int coalesce) {
 
 
 void Mem_Dump() {
+  if(free_head == NULL) {
+    printf("No free memory available\n");
+    return;
+  }
   header* temp = free_head;
   int index = 1;
   while(temp != NULL) {
     header* hnext = temp->next;
-    long size = hnext != NULL ? (char*)hnext - (char*)temp - HEADER_SIZE: (char*)end_address - (char*)temp - HEADER_SIZE;
-    printf("[%d] free address header at %p with size %ld and state %c\n", index, (char*)temp+HEADER_SIZE, size, temp->state);
+    long size = hnext != NULL ? (char*)hnext - (char*)temp: (char*)end_address - (char*)temp;
+    printf("[%d] free address header at %p and state %c, free size counting  header: %ld; free size not counting header: %ld\n", index, (char*)temp, temp->state, size, size - HEADER_SIZE);
     index ++;
     temp = temp->next_free;
   } 

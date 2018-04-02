@@ -1,14 +1,17 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <assert.h>
 #include "mem.h"
 
 #define SUCCESS 0                                                                           
 #define FAIL -1
 #define TRUE 1
 #define FALSE 0
+#define N 10
 
 int main(int argc, char** argv) {
   printf("* A simple test for Mem_Free with coalesce\n");
+  printf("* Only some free are coalesce, should end up with 2 free regions, one of them with bigger size, the distance between two free regions should be '2a8' in hex\n");
   printf("* Also checked for invalid free pointers\n");
   printf("* Check memory dump for results\n");
 
@@ -17,68 +20,40 @@ int main(int argc, char** argv) {
     printf("Freed null pointer\n");
     printf("Test failed\n");
     exit(EXIT_FAILURE);
+  } else {
+    assert(m_error == E_BAD_POINTER);
   }
-  long regionsize = 4100;
+  long regionsize = 5000;
+  void* store[N];
+  long size = 97;
   if(Mem_Init(regionsize) == FAIL) {
     printf("Init failed\n");
     printf("Test failed\n");
     exit(EXIT_FAILURE);
   }
 
-  long size_one = 1;
-  long size_two = 20000;
-  long size_three = 2000;
-  void* region_one = Mem_Alloc(size_one);
-  printf("* region_one starts at %p\n", region_one);
-  void* region_two = Mem_Alloc(size_two);
-  printf("* region_two starts at %p\n", region_two); 
-  void* region_three = Mem_Alloc(size_three);
-  printf("* region_three starts at %p\n", region_three); 
-  if(region_one == NULL) {
-    printf("Alloc region_one failed. Test failed\n");
+  
+  for(int i = 0; i < N-1; i++) {
+    printf("*** Alloc and free for region %d ***\n", i);
+    store[i] = Mem_Alloc(size);
+    if(store[i] == NULL) {
+      exit(EXIT_FAILURE);
+    }
+    if(i != 4) {
+      if(Mem_Free(store[i], FALSE) == FAIL) {
+	exit(EXIT_FAILURE);
+      }
+    }
+    Mem_Dump();
+    printf("\n");
+  }
+  printf("*** Alloc and free for region %d ***\n", N);
+  store[N-1] = Mem_Alloc(size);
+  if(store[N-1] == NULL) {
     exit(EXIT_FAILURE);
   }
-  if(region_two == NULL) {
-    printf("Alloc region_two failed. Test failed\n");
-    exit(EXIT_FAILURE);
-  } 
-  if(region_three == NULL) {
-    printf("Alloc region_three failed. Test failed\n");
-    exit(EXIT_FAILURE);
-  }
-
-  printf("* Free region_one\n");
-  if(Mem_Free(region_one, TRUE) == FAIL) {
-    printf("Free region_one failed\n");
+  if(Mem_Free(store[N-1], TRUE) == FAIL) {
     exit(EXIT_FAILURE);
   }
   Mem_Dump();
-  printf("* Free region_two\n");
-  if(Mem_Free(region_two, TRUE) == FAIL) {
-    printf("Free region_two failed\n");
-    exit(EXIT_FAILURE);
-  }
-  Mem_Dump();
-  printf("* Free region_three\n");
-  if(Mem_Free(region_three, TRUE) == FAIL) {
-    printf("Free region_three failed\n");
-    exit(EXIT_FAILURE);
-  }
-  Mem_Dump();
-
-  long size_four = 4999;
-  void* region_four = Mem_Alloc(size_four);
-  printf("* region_four starts at %p\n", region_four);  
-  if(region_four == NULL) {
-    printf("Alloc region_four failed %d. Test failed\n", m_error);                                                        
-    exit(EXIT_FAILURE);
-  }
-  Mem_Dump();
-  printf("* Free region_four\n");
-  if(Mem_Free(region_four, TRUE) == FAIL) {
-    printf("Free region_four failed\n");
-    exit(EXIT_FAILURE);
-  }
-  Mem_Dump(); 
-  printf("Test passed!\n");
 }
