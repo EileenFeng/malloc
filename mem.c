@@ -104,7 +104,7 @@ void *Mem_Alloc(long size) {
     m_error = E_CORRUPT_FREESPACE;
     return NULL;
   }
-  
+  printf("canary_statr is %d %d at %p %p %p %p %p %p %p %p %p\n", target->canary_start, sizeof(target), target, &(target->canary_start), &(target->prev), &(target->next), &(target->next_free), &(target->state), &(target->padding1), &(target->padding2), &(target->canary_end));
   if(target->canary_start != CSTART || target->canary_end != CEND) {
     m_error = E_CORRUPT_FREESPACE;
     return NULL;
@@ -173,6 +173,7 @@ int Mem_Free(void* ptr, int coalesce) {
     return FAIL;
   }
   if(target->canary_end != CEND || target->canary_start != CSTART) {
+    printf("in free %d  and end %d\n", target->canary_start, target->canary_end);
     m_error = E_PADDING_OVERWRITTEN;
     return FAIL;
   }
