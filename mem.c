@@ -270,31 +270,6 @@ int Mem_Free(void* ptr, int coalesce) {
 	result->next_free = after_free->next_free;
       }
     } else {
-
-      /*
-      header* curfreenode = free_head;
-      header* cur = curfreenode;
-      header* fol = curfreenode->next_free;
-      
-      while(fol != NULL) {
-	if(cur->next == fol) {
-	  curfreenode->next_free = fol->next_free;
-	  curfreenode->next = fol->next;
-	  if(fol->next != NULL) {
-	    fol->next->prev = curfreenode;
-	  }
-	  cur = fol;
-	  fol = fol->next_free;
-	  cur->next_free = NULL;
-	} else {
-	  curfreenode->next_free = fol;
-	  curfreenode = fol;
-	  cur = fol;
-	  fol = fol->next_free;
-	}
-      }
-      coal_all = FALSE;
-      */
       combine_freelist();
     }
   }
