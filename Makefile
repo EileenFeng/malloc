@@ -1,5 +1,5 @@
 CC = gcc
-FLAGS = -Wall -fpic -g -fpack-struct
+FLAGS = -Wall -fpic -g -fpack-struct -DALG
 
 all: tinitrp tinitone taligned tnotaligned tworstfit t_sim_free tcoal tcall tnospace twrite
 
@@ -40,4 +40,4 @@ mem.o: mem.c mem.h header.c header.h
 	$(CC) $(FLAGS) -c mem.c header.c
 
 clean:
-	rm *.o libmalloc.so tinitrp tinitone taligned tnotaligned tworstfit t_sim_free tcoal tcall tnospace twrite 
+	rm *.o libmalloc.so tinitrp tinitone taligned tnotaligned tworstfit t_sim_free tcoal tcall tnospace twrite

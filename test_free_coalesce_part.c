@@ -3,7 +3,7 @@
 #include <assert.h>
 #include "mem.h"
 
-#define SUCCESS 0                                                                           
+#define SUCCESS 0
 #define FAIL -1
 #define TRUE 1
 #define FALSE 0
@@ -32,7 +32,7 @@ int main(int argc, char** argv) {
     exit(EXIT_FAILURE);
   }
 
-  
+
   for(int i = 0; i < N-1; i++) {
     printf("*** Alloc and free for region %d ***\n", i);
     store[i] = Mem_Alloc(size);
@@ -56,4 +56,5 @@ int main(int argc, char** argv) {
     exit(EXIT_FAILURE);
   }
   Mem_Dump();
+  printf("Test passed\n");
 }

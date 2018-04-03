@@ -14,7 +14,16 @@
 #define SUCCESS 0
 #define FAIL -1
 #define ALIGNED 8
-#define EXPAND 5
+
+#ifdef WC
+  #define EXPAND 40
+#endif
+#ifdef ALG
+  #define EXPAND 5
+#endif
+#ifdef AVG
+  #define EXPAND 3
+#endif
 
 int m_error;
 
@@ -34,7 +43,7 @@ static void set_biggest() {
   while(traverse != NULL) {
     header* temp = traverse->next;
     long size = temp != NULL ? (char*)temp - (char*)traverse - HEADER_SIZE : (char*)end_address - (char*)traverse - HEADER_SIZE;
-    
+
     if(size > maxsize) {
       maxsize = size;
       prev_second_big = prev_biggest;
@@ -48,7 +57,7 @@ static void set_biggest() {
 }
 
 static void combine_freelist() {
-  header* curfreenode = free_head;                                                                               
+  header* curfreenode = free_head;
   header* cur = curfreenode;
   header* fol = curfreenode->next_free;
   while(fol != NULL) {
@@ -68,7 +77,7 @@ static void combine_freelist() {
       fol = fol->next_free;
     }
       }
-  coal_all = FALSE;  
+  coal_all = FALSE;
 }
 
 int Mem_Init(long sizeofRegion) {
@@ -80,7 +89,7 @@ int Mem_Init(long sizeofRegion) {
     m_error = E_BAD_ARGS;
     return FAIL;
   }
-  
+
   long byte_roundup = sizeofRegion % ALIGNED == 0 ? (long)(sizeofRegion / ALIGNED) : (long) round(sizeofRegion * 1.0f / ALIGNED + 0.5f);
   long byte_num = byte_roundup * ALIGNED * EXPAND;
   long region_size = byte_num % getpagesize() == 0 ? (long)(byte_num / getpagesize()) : (long) round(byte_num * 1.0f / getpagesize() + 0.5f);
@@ -94,7 +103,7 @@ int Mem_Init(long sizeofRegion) {
   end_address = (void*)((long)((char*)free_head + size_of_region));
   new_header(free_head, NULL, NULL, FREE, NULL);
   init = TRUE;
-  return SUCCESS;   
+  return SUCCESS;
 }
 
 void *Mem_Alloc(long size) {
@@ -110,9 +119,9 @@ void *Mem_Alloc(long size) {
 
   // get the max node
   if(biggest == NULL) {
-    set_biggest();   
+    set_biggest();
   }
-  
+
   target = biggest;
   before_target = prev_biggest;
 
@@ -120,7 +129,7 @@ void *Mem_Alloc(long size) {
     m_error = E_NO_SPACE;
     return NULL;
   }
-    
+
   if(target->state == ALLOC) {
     m_error = E_CORRUPT_FREESPACE;
     return NULL;
@@ -128,15 +137,15 @@ void *Mem_Alloc(long size) {
   if(target->canary_start != CSTART || target->canary_end != CEND) {
     m_error = E_CORRUPT_FREESPACE;
     return NULL;
-  }   
-  
+  }
+
   header* nexth = target->next;
   header* next_free = target->next_free;
   header* new_free = NULL;
   long maxsize = nexth == NULL ? (char*)end_address - (char*)target - HEADER_SIZE : (char*)nexth - (char*)target - HEADER_SIZE;
   target->state = ALLOC;
-  target->next_free = NULL;      
-  
+  target->next_free = NULL;
+
   if(maxsize < actual_assigned) {
     m_error = E_NO_SPACE;
     return NULL;
@@ -158,14 +167,14 @@ void *Mem_Alloc(long size) {
     } else {
       free_head = new_free;
     }
-    if(nexth != NULL) { 
+    if(nexth != NULL) {
       nexth->prev = new_free;
     }
   }
   target->canary_start = CSTART;
   target->canary_end = CEND;
-  
-  if(second_big != NULL) {                                                                                                
+
+  if(second_big != NULL) {
       header* snext = second_big->next;
       long ssize = snext == NULL ? (char*)end_address - (char*)second_big - HEADER_SIZE : (char*)snext - (char*)second_big - HEADER_SIZE;
       long bsize = maxsize - actual_assigned;
@@ -174,7 +183,7 @@ void *Mem_Alloc(long size) {
       } else {
 	biggest = new_free;
       }
-  } else {                                                                                                                
+  } else {
       biggest = new_free;
   }
   return (void*)((char*)target + HEADER_SIZE);
@@ -190,7 +199,7 @@ int Mem_Free(void* ptr, int coalesce) {
     combine_freelist();
     return SUCCESS;
   }
-  
+
   header* target = (header*)((char*) ((header*)ptr) - HEADER_SIZE);
   if(target->state == FREE) {
     m_error = E_BAD_POINTER;
@@ -200,7 +209,7 @@ int Mem_Free(void* ptr, int coalesce) {
     m_error = E_PADDING_OVERWRITTEN;
     return FAIL;
   }
-  
+
   target->state = FREE;
   header* prev_free = NULL;
   header* after_free = free_head;
@@ -210,7 +219,7 @@ int Mem_Free(void* ptr, int coalesce) {
     target->next_free = NULL;
     return SUCCESS;
   }
-  
+
   if(target > free_head) {
     header* temp = target->prev;
     while(temp != NULL) {
@@ -228,8 +237,8 @@ int Mem_Free(void* ptr, int coalesce) {
   } else {
     prev_free->next_free = target;
   }
-  target->next_free = after_free;   
-  
+  target->next_free = after_free;
+
   if(coalesce == FALSE) {
     coal_all = TRUE;
   } else {
@@ -288,5 +297,5 @@ void Mem_Dump() {
     printf("[%d] free address header at %p and state %c, free size counting  header: %ld; free size not counting header: %ld\n", index, (char*)temp, temp->state, size, size - HEADER_SIZE);
     index ++;
     temp = temp->next_free;
-  } 
+  }
 }
