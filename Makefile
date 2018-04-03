@@ -1,5 +1,5 @@
 CC = gcc
-FLAGS = -Wall -fpic -g
+FLAGS = -Wall -fpic -g -fpack-struct
 
 all: tinitrp tinitone taligned tnotaligned tworstfit t_sim_free tcoal tcall tnospace twrite kcoal kncoal
 

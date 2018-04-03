@@ -19,7 +19,6 @@
 int m_error;
 
 static header* free_head = NULL;
-//static header* head = NULL;
 static header* prev_biggest = NULL;
 static header* biggest = NULL;
 static header* second_big = NULL;
@@ -95,7 +94,6 @@ int Mem_Init(long sizeofRegion) {
   end_address = (void*)((long)((char*)free_head + size_of_region));
   new_header(free_head, NULL, NULL, FREE, NULL);
   init = TRUE;
-  //  printf(" size_of_region %ld in init free list %p and end address %p\n", size_of_region, free_head, (void*)end_address);
   return SUCCESS;   
 }
 
@@ -127,7 +125,6 @@ void *Mem_Alloc(long size) {
     m_error = E_CORRUPT_FREESPACE;
     return NULL;
   }
-  printf("canary_statr is %d %d at %p %p %p %p %p %p %p %p %p\n", target->canary_start, sizeof(target), target, &(target->canary_start), &(target->prev), &(target->next), &(target->next_free), &(target->state), &(target->padding1), &(target->padding2), &(target->canary_end));
   if(target->canary_start != CSTART || target->canary_end != CEND) {
     m_error = E_CORRUPT_FREESPACE;
     return NULL;
@@ -145,7 +142,6 @@ void *Mem_Alloc(long size) {
     return NULL;
   }
 
-  //printf("Actual assigned %ld\n", actual_assigned);
   if(maxsize == actual_assigned) {
     if(before_target != NULL) {
       before_target->next_free = next_free;
@@ -181,7 +177,6 @@ void *Mem_Alloc(long size) {
   } else {                                                                                                                
       biggest = new_free;
   }
-  //printf("header is at %p\n", target);
   return (void*)((char*)target + HEADER_SIZE);
 }
 
@@ -202,7 +197,6 @@ int Mem_Free(void* ptr, int coalesce) {
     return FAIL;
   }
   if(target->canary_end != CEND || target->canary_start != CSTART) {
-    printf("in free %d  and end %d\n", target->canary_start, target->canary_end);
     m_error = E_PADDING_OVERWRITTEN;
     return FAIL;
   }

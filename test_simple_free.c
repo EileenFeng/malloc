@@ -12,7 +12,7 @@
 
 int main(int argc, char** argv) {
   printf("* A simple test for Mem_Free without coalesce\n");
-  printf("* Also checked for invalid free pointers: NULL pointers and already-freed regions\n");
+  printf("* Also checked for invalid free pointers: NULL pointers without coalesce and already-freed regions\n");
   printf("* Mem_Dump should prints out one more free region during each iteration\n");
 
   printf("* Testing Invalid free: free NULL pointers\n");
