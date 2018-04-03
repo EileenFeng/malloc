@@ -3,7 +3,7 @@
 
 #define ALLOC 65
 #define FREE 70
-#define CSTART 31
+#define CSTART 26
 #define CEND 30
 #define PADDING 80
 
@@ -13,7 +13,7 @@ typedef struct header {
   struct header* prev;
   struct header* next;
   struct header* next_free;
-  char state;
+  int state;
   char padding1;
   char padding2;
   char canary_end;

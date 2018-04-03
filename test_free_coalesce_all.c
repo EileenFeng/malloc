@@ -35,7 +35,7 @@ int main(int argc, char** argv) {
   printf("*** Initial free memory region before any allocations ***\n");
   Mem_Dump();
   printf("\n");
-  for(int i = 0; i < N-1; i++) {
+  for(int i = 0; i < N; i++) {
     printf("*** Alloc and free for region %d ***\n", i);
     store[i] = Mem_Alloc(size);
     if(store[i] == NULL) {
@@ -47,13 +47,11 @@ int main(int argc, char** argv) {
     Mem_Dump();
     printf("\n");
   }
-  printf("*** Alloc and free for region %d; now should only left with one free region with size equal to the size of the initial free memory region ***\n", N);
-  store[N-1] = Mem_Alloc(size);
-  if(store[N-1] == NULL) {
-    exit(EXIT_FAILURE);
-  }
-  if(Mem_Free(store[N-1], TRUE) == FAIL) {
+  printf("*** Now coalesce the whole list. Mem_Dump should only output one free memory region with size equal to the size of memory region before any allocations ***\n");
+  if(Mem_Free(NULL, TRUE) == FAIL) {
     exit(EXIT_FAILURE);
   }
   Mem_Dump();
+  printf("\n");
+  printf("Test passed\n");
 }

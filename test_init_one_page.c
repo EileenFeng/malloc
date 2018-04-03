@@ -9,6 +9,7 @@
 
 int main(int argc, char** argv){
   printf("* Test for bad initialization arguments and one page initialization\n");
+  printf("* Based on my implementation, the actual size initialized will be 5 times the original input in consideration of worst case scenarios\n");
   printf("* Initialization should fail for the first two times and succeed for the third time\n");
   printf("* Initial address should end with digit '0' or '8'\n");
   

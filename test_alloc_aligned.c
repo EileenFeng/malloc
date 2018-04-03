@@ -11,6 +11,7 @@
 
 int main(int argc, char** argv) {
   printf("* Test for simple 8-byte allocation, several aligned allocation and free\n");
+  printf("* Mem_Dump should output increasing number of free memory regions, each time the size of the new memory region increases 8\n");
   long regionsize = 500;
   if(Mem_Init(regionsize) == FAIL) {
     printf("Init failed\n");

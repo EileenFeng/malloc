@@ -1,13 +1,17 @@
 CC = gcc
 FLAGS = -Wall -fpic -g
 
-all: tinitrp tinitone taligned tnotaligned tworstfit t_sim_free tcoal tcall tnospace kcoal kncoal
+all: tinitrp tinitone taligned tnotaligned tworstfit t_sim_free tcoal tcall tnospace twrite kcoal kncoal
 
 kcoal: kyu_two_mil_coal.c libmalloc.so
 	$(CC) -o kcoal -Wall kyu_two_mil_coal.c -L. -lmalloc -lm
 
 kncoal: kyu_two_mil_no_coal.c libmalloc.so
 	$(CC) -o kncoal -Wall kyu_two_mil_no_coal.c -L. -lmalloc -lm
+
+twrite: test_write_memory.c libmalloc.so
+	$(CC) -o twrite -Wall test_write_memory.c -L. -lmalloc -lm
+
 tnospace: test_no_space.c libmalloc.so
 	$(CC) -o tnospace -Wall test_no_space.c -L. -lmalloc -lm
 
@@ -42,4 +46,4 @@ mem.o: mem.c mem.h header.c header.h
 	$(CC) $(FLAGS) -c mem.c header.c
 
 clean:
-	rm *.o libmalloc.so tinitrp tinitone taligned tnotaligned tworstfit t_sim_free tcoal tcall tnospace kcoal kncoal
+	rm *.o libmalloc.so tinitrp tinitone taligned tnotaligned tworstfit t_sim_free tcoal tcall tnospace twrite kcoal kncoal

@@ -14,7 +14,7 @@
 #define HEADER_SIZE 32
 
 int main(int argc, char** argv) {
-  printf("Test for no memory left to assign\n");
+  printf("* Test for no memory left to assign\n");
   long regionsize = getpagesize();
   if(Mem_Init(regionsize) == FAIL) {
     printf("Init failed\n");
@@ -45,6 +45,7 @@ int main(int argc, char** argv) {
   }
   printf("*** After freeing and coalesce some memory ***\n");
   Mem_Dump();
+  printf("*** Allocate some memory and free without coalesce\n");
   region_one = Mem_Alloc(UNITSIZE);
   if(region_one == NULL) {
     exit(EXIT_FAILURE);

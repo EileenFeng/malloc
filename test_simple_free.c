@@ -16,7 +16,7 @@ int main(int argc, char** argv) {
   printf("* Mem_Dump should prints out one more free region during each iteration\n");
 
   printf("* Testing Invalid free: free NULL pointers\n");
-  if(Mem_Free(NULL, TRUE) == FAIL) {
+  if(Mem_Free(NULL, FALSE) == FAIL) {
     assert(m_error == E_BAD_POINTER);
   } else {
     printf("Test failed\n");

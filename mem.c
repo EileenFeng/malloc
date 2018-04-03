@@ -48,6 +48,29 @@ static void set_biggest() {
   }
 }
 
+static void combine_freelist() {
+  header* curfreenode = free_head;                                                                               
+  header* cur = curfreenode;
+  header* fol = curfreenode->next_free;
+  while(fol != NULL) {
+    if(cur->next == fol) {
+      curfreenode->next_free = fol->next_free;
+      curfreenode->next = fol->next;
+      if(fol->next != NULL) {
+	fol->next->prev = curfreenode;
+      }
+      cur = fol;
+      fol = fol->next_free;
+      cur->next_free = NULL;
+	} else {
+      curfreenode->next_free = fol;
+      curfreenode = fol;
+      cur = fol;
+      fol = fol->next_free;
+    }
+      }
+  coal_all = FALSE;  
+}
 
 int Mem_Init(long sizeofRegion) {
   if(init == TRUE) {
@@ -122,7 +145,7 @@ void *Mem_Alloc(long size) {
     return NULL;
   }
 
-  printf("Actual assigned %ld\n", actual_assigned);
+  //printf("Actual assigned %ld\n", actual_assigned);
   if(maxsize == actual_assigned) {
     if(before_target != NULL) {
       before_target->next_free = next_free;
@@ -158,15 +181,21 @@ void *Mem_Alloc(long size) {
   } else {                                                                                                                
       biggest = new_free;
   }
-  printf("header is at %p\n", target);
+  //printf("header is at %p\n", target);
   return (void*)((char*)target + HEADER_SIZE);
 }
 
 int Mem_Free(void* ptr, int coalesce) {
-  if(ptr == NULL) {
+  if(ptr == NULL && coalesce == FALSE) {
     m_error = E_BAD_POINTER;
     return FAIL;
   }
+
+  if(ptr == NULL && coalesce == TRUE) {
+    combine_freelist();
+    return SUCCESS;
+  }
+  
   header* target = (header*)((char*) ((header*)ptr) - HEADER_SIZE);
   if(target->state == FREE) {
     m_error = E_BAD_POINTER;
@@ -241,6 +270,8 @@ int Mem_Free(void* ptr, int coalesce) {
 	result->next_free = after_free->next_free;
       }
     } else {
+
+      /*
       header* curfreenode = free_head;
       header* cur = curfreenode;
       header* fol = curfreenode->next_free;
@@ -263,6 +294,8 @@ int Mem_Free(void* ptr, int coalesce) {
 	}
       }
       coal_all = FALSE;
+      */
+      combine_freelist();
     }
   }
   biggest = NULL;
