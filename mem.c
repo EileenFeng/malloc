@@ -286,7 +286,7 @@ int Mem_Free(void* ptr, int coalesce) {
 
 void Mem_Dump() {
   if(free_head == NULL) {
-    printf("No free memory available\n");
+    printf("[NONE] No free memory available\n");
     return;
   }
   header* temp = free_head;

@@ -4,7 +4,7 @@
 #include <unistd.h>
 #include "mem.h"
 
-#define SUCCESS 0                                                                           
+#define SUCCESS 0
 #define FAIL -1
 #define UNITSIZE 8
 #define TRUE 1
@@ -15,6 +15,7 @@
 
 int main(int argc, char** argv) {
   printf("* Test for no memory left to assign\n");
+  printf("* This tests assume aligned (pass in ALG as the flag in compilation)\n");
   long regionsize = getpagesize();
   if(Mem_Init(regionsize) == FAIL) {
     printf("Init failed\n");
