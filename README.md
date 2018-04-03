@@ -13,6 +13,7 @@ How it works:
 
 Limitations:
 - 'Mem_Init' and 'Mem_Alloc' all supports round up
+- Also requires compile with '-lm' flag to use the C 'math.h' library
 - 'Mem_Dump' prints out the memory size includes and not includes the header size
 - Based on the implementation of the header struct, needs to compile with '-fpack-struct' flag to ensure the exact layout of the header struct, which might cause undefined behavior because it obeys the alignment rules reinforced by C language
 
